@@ -113,6 +113,36 @@ app.post("/register", async (req, res) => {
   }
 });
 
+app.get("/userpost/:user_id", async (req, res) => {
+  let {
+    user_id
+  } = req.params
+
+  user_id = parseInt(user_id);
+  if (!Number.isInteger(user_id)) {
+    return res.status(400).json({
+      message: "ID de usuario inválido"
+    });
+  }
+
+  try {
+    const result = await pool.query("SELECT name FROM users WHERE id = $1", [user_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Usuario no encontrado"
+      });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error ejecutando consulta:", error);
+    res.status(500).json({
+      message: "Error interno del servidor"
+    });
+  }
+});
+
 app.get("/user/:user_id", authenticateToken, async (req, res) => {
   let {
     user_id
@@ -130,7 +160,7 @@ app.get("/user/:user_id", authenticateToken, async (req, res) => {
     })
   }
   try {
-    const result = await pool.query("SELECT name FROM users WHERE user_id = $1", [user_id]);
+    const result = await pool.query("SELECT name FROM users WHERE id = $1", [user_id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({
